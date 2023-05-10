@@ -1,0 +1,186 @@
+---
+title: "NFL Draft Storyboard"
+description: |
+  Story of NFL Draft Through Visualizations
+---
+
+<style>
+  h1 {
+     font-family: Optima, sans-serif;
+     font-size: 40px;
+}
+  p {
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+  }
+  d-article {
+    grid-template-columns: none;
+    margin: 0 30px 0 30px;
+  }
+  h2 {
+     font-size: 30px;
+  }
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+library(readr)
+library(cfbplotR)
+library(nflplotR)
+library(ggplot2)
+library(plotly)
+nfl_draft <- read_csv("nfl_draft2.csv")
+nfl_draft = nfl_draft[nfl_draft$year >= 1995, ]
+nfl_draft$rnd = factor(nfl_draft$rnd, levels = 1:7, ordered = TRUE)
+nfl_draft$hof = factor(nfl_draft$hof, levels = c("No", "Yes"))
+nfl_draft$college_univ[nfl_draft$player == "Jason Witten"] = "Tennessee"
+nfl_draft$college_univ[nfl_draft$player == "Shannon Sharpe"] = "Savannah St."
+nfl_draft$year_group = cut(nfl_draft$year, breaks = c(1985, 1995, 2005, Inf), labels = c("1985-1994", "1995-2004", "2005-2015"))
+nfl_draft$position_standard = factor(nfl_draft$position_standard, levels = c("QB", "RB", "WR", "TE", "C", "G", "T", "LS", "DE", "DT", "LB", "DB", "FB", "K", "P"))
+attach(nfl_draft)
+```
+
+```{r}
+qbdf = nfl_draft[pos == "QB",]
+rbdf = nfl_draft[pos == "RB",]
+wrdf = nfl_draft[pos == "WR",]
+tedf = nfl_draft[pos == "TE",]
+dbdf = nfl_draft[position_standard == "DB",]
+lbdf = nfl_draft[position_standard =="LB",]
+```
+
+
+<h1> A story of the NFL Draft from 1995-2015 </h1>
+<p style='width:60%;'> The NFL Draft is often looked at as the most fundamental part of building a great team. For reasons such as contract value, positional value, and the uncertainty of college talent translating to the NFL, this is the time where the smartest general managers, scouts, and decision makers can propel their teams ahead in the win column. The following visualizations use data from the 1995-2015 drafts, cutting all NFL data off at 2015 as well, to tell a story of what positions are valued highest, the difference in value between rounds, what colleges have been producing the most NFL prospects, and much more. </p>
+
+
+<h2> So what positions are picked first? </h2>
+<div style='display:flex;flex-direction:row'>
+```{r, class.source='testClass'}
+facet_names = nfl_draft$rnd
+ggplot(nfl_draft, aes(x = position_standard)) + 
+  geom_bar(aes(fill = position_standard)) + 
+  # stat_summary(geom = "point", fun = "mean", color = "red", size = 4, alpha = .75, shape = 18) +
+  facet_wrap(.~ rnd, labeller = as_labeller(facet_names)) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5)) +
+  labs(x = "Position", y = "Number of Players Picked") +
+  guides(fill=guide_legend(title="Position"))
+
+# ggplot(nfl_draft[ap1 > 0,], aes(x = rnd, y = ap1)) +
+#   geom_jitter(aes(color = rnd, alpha = 0.3), binaxis = "y", dotsize = .3) +
+#   labs(x = "Round", y = "All-Pro Selections") +
+#   guides(color=guide_legend(title="Round"), alpha = guide_legend(NULL))
+
+```
+<p style='width:60%;'> These initial graphs, broken down by round and position, show the frequency with which certain positions have been picked in each round over the entire 20 year span we're looking at. Skews occur in the fact that positions such as DB and WR will have more draft picks across the board as more than one of them will be on the field at a time, as opposed to the QB position where you'll likely have one on the field, and positions such as long snapper (LS) which will likely play less than ten snaps each game. Still, comparing the heights of these barrs across rounds can give us a general estimate of which positions are drafted highly, and which are not. Quarterback unsurpisingly sees its most frequent selection in the first round, as its the most valuable position on the field in terms of wins and cost, while linebackers are more frequently drafted in middle and later rounds for related but opposite reasons. </p>
+</div>
+
+<h2> Late round picks play...just not as much. </h2>
+<div style='display:flex;flex-direction:row-reverse'>
+```{r}
+ggplot(nfl_draft, aes(x=rnd, y = g, fill = rnd)) +
+  geom_boxplot(alpha = 0.8) +
+  geom_violin(alpha = 0.3) +
+  labs(x = "Round", y = "Games Played by Draft Pick", title = "Games Played per Player by Round") +
+  guides(fill=guide_legend(title="Round"))
+  
+```
+<p style='width:60%;'> This visualization combines violin plots with box plots to show the average games played by a draft pick from each round, with vioilin plots emphasizing the distribution densities and the box plots generating mean lines and identifiable outliers for each round. In terms of getting on the field, its clear that the earlier one's picked, the more likely they are to sustain a longer career or get more playing time during that career. The mean consistently decreases from an average around 90 games played in the first round, to about 20 played by draft picks of the final round. Plenty of outliers do exist in later rounds however, demonstrating that while on average you're less likely to get a long term contributor, good players can fall to the final rounds and reward a lucky team that takes a chance on them.</p>
+</div>
+
+
+<h2> They also don't play as well. </h2>
+<div style='display:flex;flex-direction:row'>
+
+```{r}
+ggplot(nfl_draft[ap1>=1,]) +
+  geom_histogram(aes(x = pick, fill = rnd), boundary = 0, bins = 50) +
+  labs(title = "All Pro Players by Draft Pick 1995-2015", x = "Draft Pick", y = "Number of Players with an All-Pro Selection") +
+  guides(fill=guide_legend(title="Round")) +
+  scale_fill_brewer(palette = "Set1")
+```
+<p style='width:60%;'> While we've determined that you can find team contributors throughout the draft, it gets considerably harder to find elite talent as picks go by. This histogram counts the number of players who have been selected to an All-Pro First Team in their career compared to their draft pick. This data was then colored by round to clarify those cutoffs which occur roughly every 32 picks. The frequency of finding elite talent, as measured by number of All-Pros in this instance, gets considerably more difficult as picks, let alone rounds, go by. With a large portion of All-Pros coming from the first round and then a relative plateau in rounds two and three, elite level talent becomes nearly impossible to find on day three of the draft considering this takes into account 20 years of NFL draft data.</p>
+</div>
+
+
+
+
+
+<h2> How does college affect this? </h2>
+<div style='display:flex;flex-direction:row-reverse'>
+
+```{r}
+ggplot(nfl_draft[rnd == 1 & year >= 2010,]) +
+  geom_bar(aes(x = college_univ[rnd == 1 & year >= 2010], color = college_univ[rnd == 1 & year >= 2010], fill = college_univ[rnd == 1 & year >= 2010])) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  scale_fill_cfb() +
+  scale_color_cfb(alt_colors = college_univ[rnd == 1 & year >= 2010]) +
+  labs(x = "College or University", y = "Number of 1st Round Picks", title = "NFL 1st Rounders 2010-2015")
+```
+<p style='width:60%;'> Now that we have a general understanding of the draft, we can analyze how colleges and NFL teams factor into the equation of the NFL draft. I wanted to see where the most high end talent was being produced, and due to the large number of colleges represented across 20 years of first round selections, I limited the data to the years 2010-2015, color coding bars by team colors using cfbplotR to see which universities recently have been putting out the most first round draft picks. Unsurprisingly, this time period had the first round dominated by Alabama prospects as they had 16 first round selections across this shorter span. The next closest of Florida sits a whole 7 players behind them. Other schools contributing significantly include Texas A&M, Florida State, and LSU with 7, 8, and 6 first round selections respectively. Now that we know which schools are producing the most talent, lets analyze the NFL teams drafting and developing elite players. </p>
+</div>
+
+<h2> Ravens on Top! </h2>
+<div style='display:flex;flex-direction:row'>
+
+```{r}
+ggplot(nfl_draft) +
+  geom_col(aes(x = tm, y = ap1, fill = tm)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  scale_fill_nfl() +
+  scale_color_nfl(type = "secondary") +
+  labs(x = "Drafted NFL Team", y = "All Pro Selections", title = "Best Drafting NFL Teams 1995-2015")
+
+# ggplot(nfl_draft[tm == "BAL" | tm == "SEA" | tm == "SF" | tm== "IND",]) +
+#   geom_col(aes(x = tm, y = ap1, fill = tm), width = .2) +
+#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+#   scale_fill_nfl() +
+#   scale_color_nfl(type = "secondary") +
+#   labs(x = "Drafted NFL Team", y = "All Pro Selections", title = "Best Drafting NFL Teams 1995-2015")
+#   
+```
+<p style='width:60%;'> For this graph, rather than use the number of players who have received All-Pro first team honors, I counted total All-Pro selections for players drafted by a team to account for perennially elite players in an organization. This column plot, also color coded by team, shows the Baltimore Ravens to have been the best drafting team in the league over this 20 year span. They combine to have 26 All-Pro selections across 11 draft picks, showing a consistent ability to identify and develop star players. With athletes such as Ed Reed and Ray Lewis carrying the way, the Ravens have used the draft to consistently improve and sustain a competitve roster. Their drafting prowess was rewarded with Super Bowl wins in 2001 and 2013. Other teams such as the 49ers, Colts, and Seahawks have also done well for themselves, while the Falcons, Commanders, and Bills have a combined 8 All-Pro selections amongst them from 1995-2015. </p>
+</div>
+
+<h2> Take a look over the years </h2>
+```{r}
+library(gganimate)
+
+ggplot(nfl_draft, aes(x = position_standard, y = pb, fill = rnd)) +
+  geom_col(alpha = 0.7, show.legend = FALSE) +
+  facet_wrap(~rnd) +
+  transition_states(states = year, state_length = 2) +
+# Here comes the gganimate specific bits
+  labs(title = 'Year: {frame_time}', x = 'Position', y = 'Pro Bowls') +
+  transition_time(as.integer(year)) +
+  ease_aes('linear') +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+<p> No draft is the same, and while looking at a 20 year period may average out some of the discrepancies between draft classes, the NFL like all sports is ever evolving. This plot above takes a similar approach of previous graphs but measures pro bowl nominations against position and round, showing how they change from year to year, starting at 1995 and ending at 2015. This graph ideally demonstrates year to year where the greatest distribution of positional success is found, and could be useful in identifying which years had particularly strong classes, or which position groups seem as though they have seen increased or decreased priority over time. </p>
+
+
+<h2> Full View </h2>
+```{r}
+axx <- list(
+  title = "pick"
+)
+
+axy <- list(
+  title = "position"
+)
+
+axz <- list(
+  title = "pro bowl selctions"
+)
+
+fig = plot_ly(nfl_draft, x = ~pick, y = ~position_standard, z = ~pb, type = 'mesh3d') 
+fig = fig %>% layout(scene = list(xaxis=axx ,yaxis=axy, zaxis=axz))
+fig
+```
+
+<p> This final graph is a 3-dimensional representation of the values this story had intended to bring to light. It can be rotated, zoomed, and maneuvered about to get a unique angle on the interaction between draft pick, position, and NFL success as measured by the less stringent metric of pro bowl selections. Hovering over this graph will give you the x, y, and z values with x representing the draft pick, y representing the position, and z the number of pro bowls the player represented made. It shows a culmination of this story with frequently more valuable players at earlier picks, but different variation depending on the position selected. The NFL draft is a nuanced process that doesn't always require taking the best player, but rather playing to the strengths of a particular year, the value of a position, or sometimes even the luck of the draw. </p>

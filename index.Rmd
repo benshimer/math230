@@ -1,0 +1,17 @@
+---
+title: "Benjamin Shimer"
+site: distill::distill_website
+theme: postcards.css
+image: "BenProfile.JPG"
+links:
+  - label: LinkedIn
+    url: "https://www.linkedin.com/in/benjamin-shimer-b5463b228/"
+  - label: GitHub
+    url: "https://github.com/"
+  - label: Email
+    url: "mailto:benshimer21@gmail.com"
+output:
+  postcards::trestles
+---
+ 
+I am an Environmental Studies Major with Statistics and Political Science Minors at Bucknell University in the class of 2024. Raised in Allentown, PA, I'm an avid Philadelphia sports fan, and I love spending my free time playing/watching sports, enjoying nature, and playing the piano. Through my classes I have picked up data visualization skills that can be observed through this website; I encourage you to look through them at your leisure!

@@ -1,0 +1,20 @@
+name: "bshimer"
+title: "Benjamin Shimer"
+description: |
+  Benjamin Shimer
+output_dir: "docs"
+theme: postcards.css
+navbar:
+  right:
+    - text: "Home"
+      href: index.html
+    - text: "Past Visualizations"
+      href: PastVisualizations.html
+    - text: "NFL Draft Infographic"
+      href: about.html
+    - text: "Story Board"
+      href: StoryBoard.html
+output: distill::distill_article
+runtime: shiny
+
+

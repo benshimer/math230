@@ -1,0 +1,31 @@
+---
+title: "NFL Draft Infographic"
+description: |
+  Broad Strokes from the 1995-2015 Draft Classes
+---
+<style>
+  h1 {
+     font-family: Optima, sans-serif;
+     font-size: 40px;
+}
+  p {
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+  }
+  d-article {
+    grid-template-columns: none;
+    margin: 0 30px 0 30px;
+  }
+  h2 {
+     font-size: 30px;
+  }
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+knitr::include_graphics("Infographic.png")
+```
